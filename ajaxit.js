@@ -7,13 +7,13 @@
         onReady: null,
         onError: null,
         onCall:null,
+        protocol:(window.document || window).location.protocol,
       
  
         // auto redirect
         redirect: function(){
-	  
             var win = window.document;
-            var baseURL = "http://"+ (win || window).location.host + ajaxItMain.basePath;
+            var baseURL = ajaxItMain.protocol + "//"+ (win || window).location.host + ajaxItMain.basePath;
             var page    = (win || window).location.href;
             var pathName = (win || window).location.pathname;
             var query='';
@@ -191,10 +191,10 @@
             $(Selector).live("click",function(evt){
                 var ajaxLink = $(this).attr('href');
                 if($(this).attr('href')){
-                    if($(this).attr('href').search('http://') > -1 &&  $(this).attr('href').match(document.domain)){
+                    if((($(this).attr('href').search('http://') > -1 && ajaxItMain.protocol == 'http:') || ($(this).attr('href').search('https://') > -1) && ajaxItMain.protocol == 'https:') && $(this).attr('href').match(document.domain)){
                         var href=$(this).attr('href').split('/');
                         ajaxLink ='/'+href.slice(3).join('/');
-                    }else if ($(this).attr('href').search('http://') > -1){
+                    }else if ($(this).attr('href').search('http://') > -1 || $(this).attr('href').search('https://') > -1){
                         return true;
                     }
                     if (!evt.isDefaultPrevented()) {
