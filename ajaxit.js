@@ -194,6 +194,9 @@
                     if((($(this).attr('href').search('http://') > -1 && ajaxItMain.protocol == 'http:') || ($(this).attr('href').search('https://') > -1) && ajaxItMain.protocol == 'https:') && $(this).attr('href').match(document.domain)){
                         var href=$(this).attr('href').split('/');
                         ajaxLink = '/' + href.slice(3).join('/');
+                    }
+                    else if ($(this).attr('href').search('http://') > -1 || $(this).attr('href').search('https://') > -1){
+                        return true;
                     } else if ($(this).attr('href').search('/') != 0) {
                       var hash=window.location.hash;
                       hash=hash.substring(hash.indexOf('#')+1, hash.length);
@@ -201,9 +204,7 @@
                       hash = hash[0];
                       ajaxLink = ajaxItMain.basePath + hash + $(this).attr('href');
                     }
-                    else if ($(this).attr('href').search('http://') > -1 || $(this).attr('href').search('https://') > -1){
-                        return true;
-                    }
+                    
                     if (!evt.isDefaultPrevented()) {
                         ajaxItMain.goTo(ajaxLink);
                     }
