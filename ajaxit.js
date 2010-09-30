@@ -1,27 +1,27 @@
+document.getElementsByTagName("html")[0].style.marginTop = "-999999px";
 (function($) {
     var ajaxItMain={
         ajaxItArea: null,
         basePath: null,
         readyList: null,
         isInit: false,
-        onReady: null,
+        onSuccess: null,
         onError: null,
         onCall:null,
+        win:(window.document || window),
         protocol:(window.document || window).location.protocol,
-      
- 
+
         // auto redirect
         redirect: function(){
-            var win = window.document;
-            var baseURL = ajaxItMain.protocol + "//"+ (win || window).location.host + ajaxItMain.basePath;
-            var page    = (win || window).location.href;
-            var pathName = (win || window).location.pathname;
-            var query='';
+            var baseURL  = ajaxItMain.protocol + "//"+ ajaxItMain.win.location.host + ajaxItMain.basePath;
+            var page     = ajaxItMain.win.location.href;
+            var pathName = ajaxItMain.win.location.pathname;
+            var query    = '';
             if(page.indexOf('?')!= -1){
                 query = page.substring(page.indexOf('?'), page.length);
             }
             if ((page).replace(/#.*/, '') != baseURL){ // redirect
-                (win || window).location.href = baseURL + "#"+ pathName.replace(ajaxItMain.basePath,"") + query;
+                ajaxItMain.win.location.href = baseURL + "#"+ pathName.replace(ajaxItMain.basePath,"") + query;
             }
         },
 
@@ -33,9 +33,11 @@
             return this.myreadylist;
         },
 
-        goToHash:function (){
-            var hash=window.location.hash;
-            hash=hash.substring(hash.indexOf('#')+1, hash.length);
+        goToHash:function (hash){
+            if(!hash){
+                hash=ajaxItMain.win.location.hash;
+                hash=hash.substring(hash.indexOf('#')+1, hash.length);
+            }
             if(hash.indexOf('#') != -1){
                 anchor = hash.substring(hash.indexOf('#')+1, hash.length);
                 if($('a[name='+anchor+']').length){
@@ -46,7 +48,6 @@
             }
 
         },
-
         // get page function
         getPage: function(hash) {
             if (hash && hash != '#'){
@@ -64,7 +65,7 @@
                         // clearing CDATA
                         data=data.replace(/\<\!\[CDATA\[\/\/\>\<\!\-\-/gi,'');
                         data=data.replace(/\/\/\-\-\>\<\!\]\]\>/gi,'');
-		      
+
                         // extracting the the head and body tags
                         var dataHead = data.match(/<\s*head.*>[\s\S]*<\s*\/head\s*>/ig).join("");
                         var dataBody = data.match(/<\s*body.*>[\s\S]*<\s*\/body\s*>/ig).join("");
@@ -78,11 +79,11 @@
 
                         dataTitle = dataTitle.replace(/<\s*title/gi,"<div");
                         dataTitle = dataTitle.replace(/<\s*\/title/gi,"</div");
-		      
+
 
                         // comments
                         var commentPattern = /\<\!\-\-([\s\S]*?)\-\-\>/ig;
-		      
+
                         // replacing head comment tags
                         var headComments = dataHead.match(commentPattern);
                         if (headComments){
@@ -133,7 +134,7 @@
                             if (!src || $("script[src='"+src+"']").length == 0){
                                 $("head").append(this);
                             }
-			  
+
                         });
 
                         // --------------------------- < body >
@@ -150,16 +151,18 @@
                         });
                         // --------------------------- < ajaxArea >
                         $("script",$dataBody).remove();
-                        var $ajaxArea     = $dataBody.find(ajaxItMain.ajaxItArea);
                         var ajaxItSuccess = 0;
-                        $ajaxArea.each(function(){
-                            var thisSelector  = this.tagName;                              // adding the tagName
-                            thisSelector += ($(this).attr("id"))?"#"+$(this).attr("id"):""; // adding id
-                            thisSelector += ($(this).attr("class"))?"."+$(this).attr("class").split(" ").join("."):""; // adding id
-                            if ($(thisSelector).length){
-                                $(thisSelector).html($(this).html());
-                                ajaxItSuccess++;
-                            }
+                        var ajaxItSelect  =  ajaxItMain.ajaxItArea.split(",");
+                        $.each(ajaxItSelect,function(){
+                            $dataBody.find(this).each( function(){
+                                var thisSelector  = this.tagName;                              // adding the tagName
+                                thisSelector += ($(this).attr("id"))?"#"+$(this).attr("id"):""; // adding id
+                                thisSelector += ($(this).attr("class"))?"."+$(this).attr("class").split(" ").join("."):""; // adding id
+                                if ($(thisSelector).length){
+                                    $(thisSelector).html($(this).html());
+                                    ajaxItSuccess++;
+                                }
+                            })
                         });
 
                         if (ajaxItSuccess == 0){
@@ -169,15 +172,15 @@
                         $(ajaxItMain.readyList).each(function(){
                             this();
                         });
-                        if (ajaxItMain.onReady){
-                            ajaxItMain.onReady();
+                        if (ajaxItMain.onSuccess){
+                            ajaxItMain.onSuccess();
                         }
-                        ajaxItMain.initLinks("a");
+                        document.getElementsByTagName("html")[0].style.marginTop = "0px";
                         ajaxItMain.goToHash();
                     }
                 });
             }
-	  
+
             if (ajaxItMain.onCall){
                 ajaxItMain.onCall();
             }
@@ -189,27 +192,35 @@
 
         initLinks: function(Selector){
             $(Selector).live("click",function(evt){
-                var ajaxLink = $(this).attr('href');
-                if($(this).attr('href')){
-                    if((($(this).attr('href').search('http://') > -1 && ajaxItMain.protocol == 'http:') || ($(this).attr('href').search('https://') > -1) && ajaxItMain.protocol == 'https:') && $(this).attr('href').match(document.domain)){
-                        var href=$(this).attr('href').split('/');
-                        ajaxLink = '/' + href.slice(3).join('/');
+                    var ajaxLink = $(this).attr('href');
+                    if($(this).attr('href') && evt.button == 0){
+                        var hash = "";
+                        if((($(this).attr('href').search('http://') > -1 && ajaxItMain.protocol == 'http:') || ($(this).attr('href').search('https://') > -1) && ajaxItMain.protocol == 'https:') && $(this).attr('href').match(document.domain)){
+                            var href=$(this).attr('href').split('/');
+                            ajaxLink = '/' + href.slice(3).join('/');
+                        }else if ($(this).attr('href').search('http://') > -1 || $(this).attr('href').search('https://') > -1){
+                            return true;
+                        } else if ($(this).attr('href').search('#')==0){
+                            hash = ajaxItMain.win.location.hash;
+                            hash = hash.substring(hash.indexOf('#')+1, hash.length);
+                            hash = hash.split('#');
+                            hash = hash[0];
+                            ajaxItMain.win.location.hash = '#'+ hash + $(this).attr('href');
+                            return false;
+                        } else if ($(this).attr('href').search('/') != 0) {
+                            hash = ajaxItMain.win.location.hash;
+                            hash = hash.substring(hash.indexOf('#')+1, hash.length);
+                            hash = hash.split('#');
+                            hash = hash[0];
+                            ajaxLink = ajaxItMain.basePath + hash + $(this).attr('href');
+                        }
+
+                        if (!evt.isDefaultPrevented()) {
+                            ajaxItMain.goTo(ajaxLink);
+                        }
+                        return false;
                     }
-                    else if ($(this).attr('href').search('http://') > -1 || $(this).attr('href').search('https://') > -1){
-                        return true;
-                    } else if ($(this).attr('href').search('/') != 0) {
-                      var hash=window.location.hash;
-                      hash=hash.substring(hash.indexOf('#')+1, hash.length);
-                      hash = hash.split('#');
-                      hash = hash[0];
-                      ajaxLink = ajaxItMain.basePath + hash + $(this).attr('href');
-                    }
-                    
-                    if (!evt.isDefaultPrevented()) {
-                        ajaxItMain.goTo(ajaxLink);
-                    }
-                }
-                return false;
+                    return true;
             });
         },
         // this should be added last so it gets all the ready event
@@ -223,7 +234,6 @@
                 }
             });
             ajaxItMain.readyList = ajaxItMain.getReadyList();
-	 
         }
     };
 

@@ -21,7 +21,12 @@
         },
         get: function(win) {
             var hash = ((win || window).location.hash).replace(/^#/, '');
-            return $.ajaxIt.basePath + hash;
+            hash = hash.split('#');
+            if(hash[1] && (_.anchor != hash[1])){
+                _.anchor=hash[1];
+                $.ajaxIt.goToHash();
+            }
+            return $.ajaxIt.basePath + hash[0];
         }
     };
 
@@ -29,10 +34,7 @@
         id: "__jQuery_history",
         init: function() {
             var html = '<iframe id="'+ this.id +'" style="display:none" src="javascript:false;" />';
-	    //var oldHtml=$("body").html();
-	    //$("body").html('<div id="body-div"><div>');
 	    $("body").before(html);
-	    //$("#body-div").html(oldHtml);
             return this;
         },
         _document: function() {
@@ -53,6 +55,7 @@
     var _ = {
         appState: undefined,
         callback: undefined,
+        anchor:undefined,
         init:  function(callback) {},
         check: function() {},
         load:  function(hash) {}
