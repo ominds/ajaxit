@@ -7,7 +7,7 @@ document.getElementsByTagName("html")[0].style.marginTop = "-999999px";
         isInit: false,
         onSuccess: null,
         onError: null,
-        onCall:null,
+        onStart:null,
         win:(window.document || window),
         protocol:(window.document || window).location.protocol,
 
@@ -185,8 +185,8 @@ document.getElementsByTagName("html")[0].style.marginTop = "-999999px";
                 });
             }
 
-            if (ajaxItMain.onCall){
-                ajaxItMain.onCall();
+            if (ajaxItMain.onStart){
+                ajaxItMain.onStart();
             }
         },
 
